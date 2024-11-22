@@ -1,5 +1,5 @@
-# Leviathan 2.0
-Leviathan is a simple "framework" for developing small (around 1-8 kilobyte) [Demoscene](https://en.wikipedia.org/wiki/Demoscene) productions. It is primarily developed for creating the [Prismbeings](https://www.pouet.net/groups.php?which=12646) 4k Intros. "Intro" is parlance for a size-wise small Demo.
+# Leviathan 3.0
+Leviathan is a "framework" for developing [Demoscene](https://en.wikipedia.org/wiki/Demoscene) productions. It was originally developed for creating the [Prismbeings](https://www.pouet.net/groups.php?which=12646) 4k Intros. "Intro" is parlance for a size-wise small Demo.
 
 ## "Features"
 * Kept as simple as possible, made for productivity.
