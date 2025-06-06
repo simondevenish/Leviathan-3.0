@@ -25,32 +25,32 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{59C1D4F3-AE93-4A0A-B4FE-60841CA865E5}</ProjectGuid>
     <ProjectName>Leviathan 2.0</ProjectName>
-    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Heavy Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Snapshot|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Editor|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -89,10 +89,10 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Editor|Win32'">
     <OutDir>out\</OutDir>
-    <IntDir>bin\debug\</IntDir>
+    <IntDir>bin\editor\</IntDir>
     <LinkIncremental>false</LinkIncremental>
     <ExecutablePath>$(SolutionDir);$(ExecutablePath)</ExecutablePath>
-    <TargetName>leviathan-debug</TargetName>
+    <TargetName>leviathan-editor</TargetName>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -239,10 +239,10 @@ shader_minifier.exe -v -o src\shaders\post.inl src\shaders\post.frag</Command>
     </ResourceCompile>
     <Link>
       <AdditionalDependencies>winmm.lib;opengl32.lib;src/4klang/4klang.obj;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>out/leviathan-debug.exe</OutputFile>
+      <OutputFile>out/leviathan-editor.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>bin\debug\$(TargetName).pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>bin\editor\$(TargetName).pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <DataExecutionPrevention>
@@ -251,7 +251,7 @@ shader_minifier.exe -v -o src\shaders\post.inl src\shaders\post.frag</Command>
       <EntryPointSymbol>
       </EntryPointSymbol>
       <AssemblyDebug>true</AssemblyDebug>
-      <ProfileGuidedDatabase>bin\debug\$(TargetName).pgd</ProfileGuidedDatabase>
+      <ProfileGuidedDatabase>bin\editor\$(TargetName).pgd</ProfileGuidedDatabase>
       <IgnoreAllDefaultLibraries>
       </IgnoreAllDefaultLibraries>
       <ManifestFile />

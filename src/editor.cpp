@@ -93,11 +93,11 @@ void Editor::updateShaders(int* mainShaderPID, int* postShaderPID, bool force_up
 			printf("Refreshing shaders...                                                   \n");
 
 			Sleep(100);
-			int newPID = reloadShaderSource("../src/shaders/fragment.frag");
+			int newPID = reloadShaderSource("src/shaders/fragment.frag");
 			if (newPID > 0)
 				*mainShaderPID = newPID;
 
-			newPID = reloadShaderSource("../src/shaders/post.frag");
+			newPID = reloadShaderSource("src/shaders/post.frag");
 			if (newPID > 0)
 				*postShaderPID = newPID;
 		}
