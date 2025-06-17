@@ -22,6 +22,11 @@
 #endif
 
 #include "glext.h"
+
+#ifdef EDITOR_CONTROLS
+#include "editor.h"
+#include "song.h"
+#endif
 #pragma data_seg(".shader")
 #include "shaders/fragment.inl"
 #if POST_PASS
@@ -35,12 +40,16 @@ static int pidMain;
 static int pidPost;
 // static HDC hDC;
 
+#ifdef EDITOR_CONTROLS
+// Window procedure for ImGui message handling
+LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+static Leviathan::Editor* g_editor = nullptr;
+#endif
+
 #ifndef EDITOR_CONTROLS
 #pragma code_seg(".main")
 void entrypoint(void)
 #else
-#include "editor.h"
-#include "song.h"
 int __cdecl main(int argc, char* argv[])
 #endif
 {
@@ -48,16 +57,25 @@ int __cdecl main(int argc, char* argv[])
 	#if FULLSCREEN
 		ChangeDisplaySettings(&screenSettings, CDS_FULLSCREEN);
 		ShowCursor(0);
-		const HDC hDC = GetDC(CreateWindow((LPCSTR)0xC018, 0, WS_POPUP | WS_VISIBLE | WS_MAXIMIZE, 0, 0, 0, 0, 0, 0, 0, 0));
+		const HDC hDC = GetDC(CreateWindow(L"static", 0, WS_POPUP | WS_VISIBLE | WS_MAXIMIZE, 0, 0, 0, 0, 0, 0, 0, 0));
 	#else
 		#ifdef EDITOR_CONTROLS
-			HWND window = CreateWindow("static", 0, WS_POPUP | WS_VISIBLE, 0, 0, XRES, YRES, 0, 0, 0, 0);
+			// Register window class for proper message handling
+			WNDCLASSW wc = {0};
+			wc.lpfnWndProc = WindowProc;
+			wc.hInstance = GetModuleHandle(NULL);
+			wc.lpszClassName = L"LeviathanEditor";
+			wc.hbrBackground = (HBRUSH)(COLOR_WINDOW);
+			RegisterClassW(&wc);
+			
+			HWND window = CreateWindowW(L"LeviathanEditor", L"Leviathan Editor", WS_OVERLAPPEDWINDOW | WS_VISIBLE, 
+				CW_USEDEFAULT, CW_USEDEFAULT, XRES, YRES, 0, 0, GetModuleHandle(NULL), 0);
 			HDC hDC = GetDC(window);
 		#else
 			// you can create a pseudo fullscreen window by similarly enabling the WS_MAXIMIZE flag as above
 			// in which case you can replace the resolution parameters with 0s and save a couple bytes
 			// this only works if the resolution is set to the display device's native resolution
-			HDC hDC = GetDC(CreateWindow((LPCSTR)0xC018, 0, WS_POPUP | WS_VISIBLE, 0, 0, XRES, YRES, 0, 0, 0, 0));
+			HDC hDC = GetDC(CreateWindow(L"static", 0, WS_POPUP | WS_VISIBLE, 0, 0, XRES, YRES, 0, 0, 0, 0));
 		#endif
 	#endif
 
@@ -81,7 +99,11 @@ int __cdecl main(int argc, char* argv[])
 		#endif
 	#else
 		Leviathan::Editor editor = Leviathan::Editor();
+		g_editor = &editor;
 		editor.updateShaders(&pidMain, &pidPost, true);
+
+		// Initialize ImGui
+		editor.initImGui(window);
 
 		// absolute path always works here
 		// relative path works only when not ran from visual studio directly
@@ -95,6 +117,16 @@ int __cdecl main(int argc, char* argv[])
 	{
 		#ifdef EDITOR_CONTROLS
 			editor.beginFrame(timeGetTime());
+			
+			// Handle window messages for ImGui
+			MSG msg;
+			while (PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
+			{
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+				if (msg.message == WM_QUIT)
+					goto exit_loop;
+			}
 		#endif
 
 		#if !(DESPERATE)
@@ -102,7 +134,9 @@ int __cdecl main(int argc, char* argv[])
 			// not always strictly necessary but increases compatibility and reliability a lot
 			// normally you'd pass an msg struct as the first argument but it's just an
 			// output parameter and the implementation presumably does a NULL check
-			PeekMessage(0, 0, 0, 0, PM_REMOVE);
+			#ifndef EDITOR_CONTROLS
+				PeekMessage(0, 0, 0, 0, PM_REMOVE);
+			#endif
 		#endif
 
 		// render with the primary shader
@@ -142,6 +176,11 @@ int __cdecl main(int argc, char* argv[])
 			glRects(-1, -1, 1, 1);
 		#endif
 
+		// Render ImGui overlay
+		#ifdef EDITOR_CONTROLS
+			editor.renderImGui(&track, position);
+		#endif
+
 		SwapBuffers(hDC);
 
 		// handle functionality of the editor
@@ -158,5 +197,30 @@ int __cdecl main(int argc, char* argv[])
 		#endif
 	);
 
+	#ifdef EDITOR_CONTROLS
+	exit_loop:
+	#endif
 	ExitProcess(0);
 }
+
+#ifdef EDITOR_CONTROLS
+// Window procedure for handling ImGui messages
+LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	if (g_editor)
+	{
+		LRESULT result = g_editor->handleWindowMessage(hWnd, message, wParam, lParam);
+		if (result != 0)
+			return result;
+	}
+
+	switch (message)
+	{
+		case WM_DESTROY:
+			PostQuitMessage(0);
+			return 0;
+	}
+
+	return DefWindowProc(hWnd, message, wParam, lParam);
+}
+#endif

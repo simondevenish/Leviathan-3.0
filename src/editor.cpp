@@ -6,6 +6,12 @@
 #include "GL/gl.h"
 #include "glext.h"
 
+#ifdef EDITOR_CONTROLS
+// Include additional Windows headers for ImGui
+#include <windowsx.h>
+#include <tchar.h>
+#endif
+
 using namespace Leviathan;
 
 #define USE_MESSAGEBOX 0
@@ -14,6 +20,190 @@ Editor::Editor() : lastFrameStart(0), lastFrameStop(0), trackPosition(0.0), trac
 {
 	printf("Editor opened...\n");
 }
+
+#ifdef EDITOR_CONTROLS
+Editor::~Editor()
+{
+	if (imguiInitialized)
+	{
+		shutdownImGui();
+	}
+}
+
+void Editor::initImGui(HWND hwnd)
+{
+	// Setup Dear ImGui context
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+
+	// Setup Dear ImGui style
+	ImGui::StyleColorsDark();
+
+	// Setup Platform/Renderer backends
+	ImGui_ImplWin32_Init(hwnd);
+	ImGui_ImplOpenGL3_Init("#version 130");
+
+	imguiInitialized = true;
+	printf("ImGui initialized\n");
+}
+
+void Editor::shutdownImGui()
+{
+	if (imguiInitialized)
+	{
+		ImGui_ImplOpenGL3_Shutdown();
+		ImGui_ImplWin32_Shutdown();
+		ImGui::DestroyContext();
+		imguiInitialized = false;
+	}
+}
+
+void Editor::renderImGui(Song* track, double position)
+{
+	if (!imguiInitialized) return;
+
+	// Start the Dear ImGui frame
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+
+	// Create the main editor overlay
+	if (showControls)
+	{
+		ImGui::SetNextWindowPos(ImVec2(10, 10), ImGuiCond_FirstUseEver);
+		ImGui::SetNextWindowSize(ImVec2(400, 120), ImGuiCond_FirstUseEver);
+		
+		if (ImGui::Begin("Leviathan Editor", &showControls, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			// Play/Pause controls
+			if (state == Playing)
+			{
+				if (ImGui::Button("Pause"))
+				{
+					state = Paused;
+					track->pause();
+				}
+			}
+			else
+			{
+				if (ImGui::Button("Play"))
+				{
+					state = Playing;
+					track->play();
+				}
+			}
+			
+			ImGui::SameLine();
+			
+			// Time display
+			int minutes = (int)(position / 60.0);
+			int seconds = (int)position % 60;
+			int percentage = trackEnd > 0 ? (int)(100.0 * position / trackEnd) : 0;
+			ImGui::Text("Time: %02d:%02d (%d%%)", minutes, seconds, percentage);
+
+			// Seekbar
+			if (trackEnd > 0)
+			{
+				float seekValue = (float)(position / trackEnd);
+				if (ImGui::SliderFloat("Timeline", &seekValue, 0.0f, 1.0f, "%.2f"))
+				{
+					double newPosition = seekValue * trackEnd;
+					track->seek(newPosition);
+				}
+			}
+
+			// Quick seek buttons
+			if (ImGui::Button("-10s"))
+			{
+				double newPos = position - 10.0;
+				if (newPos < 0) newPos = 0;
+				track->seek(newPos);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("-1s"))
+			{
+				double newPos = position - 1.0;
+				if (newPos < 0) newPos = 0;
+				track->seek(newPos);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("+1s"))
+			{
+				track->seek(position + 1.0);
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("+10s"))
+			{
+				track->seek(position + 10.0);
+			}
+
+			// Shader reload button
+			ImGui::SameLine();
+			if (ImGui::Button("Reload Shaders"))
+			{
+				shaderUpdatePending = true;
+			}
+		}
+		ImGui::End();
+	}
+
+	// Performance stats window
+	if (showStats)
+	{
+		ImGui::SetNextWindowPos(ImVec2(10, 150), ImGuiCond_FirstUseEver);
+		ImGui::SetNextWindowSize(ImVec2(250, 100), ImGuiCond_FirstUseEver);
+		
+		if (ImGui::Begin("Performance", &showStats, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			const int frameTime = lastFrameStop - lastFrameStart;
+			
+			// Calculate average FPS
+			float fps = 0.0f;
+			for (int i = 0; i < windowSize; ++i)
+			{
+				if (timeHistory[i] > 0)
+					fps += 1000.0f / static_cast<float>(timeHistory[i]);
+			}
+			fps /= static_cast<float>(windowSize);
+
+			ImGui::Text("Frame time: %d ms", frameTime);
+			ImGui::Text("FPS: %.1f", fps);
+			ImGui::Text("State: %s", state == Playing ? "Playing" : "Paused");
+		}
+		ImGui::End();
+	}
+
+	// Menu bar for toggling windows
+	if (ImGui::BeginMainMenuBar())
+	{
+		if (ImGui::BeginMenu("Windows"))
+		{
+			ImGui::MenuItem("Controls", nullptr, &showControls);
+			ImGui::MenuItem("Performance", nullptr, &showStats);
+			ImGui::EndMenu();
+		}
+		ImGui::EndMainMenuBar();
+	}
+
+	// Render ImGui
+	ImGui::Render();
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+LRESULT Editor::handleWindowMessage(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	if (imguiInitialized)
+	{
+		return ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam);
+	}
+	return 0;
+}
+
+#else
+Editor::~Editor() {}
+#endif
 
 void Editor::beginFrame(const unsigned long time)
 {
