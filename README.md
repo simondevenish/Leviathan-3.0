@@ -8,6 +8,7 @@ Leviathan is a "framework" for developing [Demoscene](https://en.wikipedia.org/w
 * Automated shader minification upon compilation.
 * Simple unintrusive editor mode with seeking and hot reloading.
 * Easy to customize for your needs.
+* ImGui Editor
 
 ## Compatibility
 Current version intended to be used with Visual Studio 2017 (any version). Make sure you have a version with the latest Windows SDK installed (at least version 10.0.17134.0), or use version 8.1. With some extra configuration 2015 and 2013 should work as well. Leviathan is is very Windows-specific and isn't really sensibly portable anywhere else.
@@ -57,7 +58,6 @@ Fork your own and submit a pull request, ideas always welcome. Please don't add 
 ## TODO
 * Automatically render and dump audio in Editor mode if no .wav already exists.
 * Support for more softsynths?
-* Editor mode overlays (non-interactive seekbar, etc.).
 * More functionality to add further render passes easily.
 * Continue Structuring the code better so not everything is inlined in the main loop.
 * Write out a version in assembly to use in the Release configuration.
